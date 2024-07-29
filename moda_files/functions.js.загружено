@@ -1,0 +1,251 @@
+$.app = {
+    page_class: 'infinite-page',
+    page_start: 0,
+    page_last: 1,
+    page_current: 0,
+    //  page_current_index - это индекс DOM-элемента с текущей страницей. Он может отличаться от номера страницы, если изначально загружена не первая.
+    //  вычисляется так: page_current - page_start
+    page_current_index: 0,
+    section_current: 0,
+    infinity_scroll: true,
+    infinity_load_page_count: 0,
+    init: function () {
+        var self = this;
+        window.getHandler.parseGet();
+        if (!window.getHandler.getParams.page) {
+            window.getHandler.setParams({
+                page: 1
+            })
+        }
+        self.page_start = parseInt(window.getHandler.getParams.page);
+        self.page_last = parseInt(window.getHandler.getParams.page);
+        console.log('PAGE LAST', self.page_last);
+        self.page_current = parseInt(window.getHandler.getParams.page);
+        self.page_current_index = self.page_current - self.page_start;
+        $('a.ajax-popup').on('click', function () {
+            return !app.ajaxLoad('popup', this.href, '', function (res) {
+                if (res) $('div.shadow-black').show('fast', function () {
+                    $('div.b-instagram-popup').show();
+                });
+            });
+        });
+        if(document.querySelector('.ajax_pages')){
+        $(window).scroll(function () {
+            /**
+             * загружаем только 2 страницы, далее при нажатии кнопки обнулим счетчик и еще к ней 2 страницы подгрузится
+             */
+            if (
+                (($(window).height() + $(window).scrollTop()) >= ($(document).height() - 3000))
+                && ($.app.infinity_scroll)
+                && (!$.app.loading)
+                && ($.app.infinity_load_page_count != 2)
+            ) {
+                $.app.loading = true;
+                $.app.pageLoad();
+            }
+
+
+            //  Определяем секцию внутри страницы
+            //
+            var c = false,
+                cPageIndex = 0,
+                pTop = $(window).height(),
+                wBottom = $(window).scrollTop() + $(window).height();
+            $('.' + self.page_class).each(function (i) {
+                var page = $(this),
+                    //  Текущую страницу определяем по попаданию  нижней границы окна между pTop и pNextTop
+                    //  pTop - расстояние от верха страници до верха документа
+                    //  pNextTop - если есть следующая страница, то это её расстояние до верха документа. Если нет - то это высота документа (задается изначально, до проверки на существование следующей страницы)
+                    //  Таким образм отступы между страницами отнесутся к верхней странице, а не уйдут вникуда
+                    pTop = page.offset().top,
+                    pNextTop = $(document).height(),
+                    //  Переменная показывает, поменялась ли страница, либо секция
+                    changedPage = false;
+                changedSection = false;
+                //  Если дальше есть ещё страница - вместо низа документа берём её offsetTop
+                if (i < ($('.' + self.page_class).length - 1)) {
+                    pNextTop = $('.' + self.page_class).eq(i + 1).offset().top;
+                }
+                if (
+                    (wBottom >= pTop) &&
+                    (wBottom < pNextTop)
+                ) {
+                    //  Нашли текущую страницу
+                    if (i != self.page_current_index) {
+                        changedPage = true;
+                        self.page_current_index = i;
+                        self.page_current = self.page_current_index + self.page_start;
+                    }
+                    if (self.page_current <= 0) {
+                        window.getHandler.deleteParams('page');
+                    } else {
+                        window.getHandler.setParams({page: self.page_current});
+                    }
+                }
+                //  Далее определяем индекс текущей секции.
+                var sectionSize = $(window).height() * 2,
+                    //  Координата низа окна относительно страницы
+                    wBottomInPage = wBottom - $('.' + self.page_class).eq(self.page_current_index).offset().top,
+                    //  Смотрим, сколько раз размер секции помещается в wBottomInPage. Это и будет индекс текущей секции
+                    j = Math.ceil(wBottomInPage / sectionSize);
+                //  Если текущая секция поменялась
+                if (self.section_current != j) {
+                    changedSection = true;
+                    self.section_current = j;
+                    //  Является ли секция первой
+                    // if (j <= 1){
+                    //     window.getHandler.deleteParams('section');
+                    // } else {
+                    //     window.getHandler.setParams({section: self.section_current});
+                    // }
+                }
+                //  Если менялась страница или секция - обновляем историю и баннеры
+                if (changedPage || changedSection) {
+                    // window.getHandler.pushGet();
+                    // Banners.reloadAll();
+                    if (changedPage) {
+                        window.getHandler.pushGet();
+                        self.sendCounters();
+                    }
+                }
+            });
+        });
+    } else {
+        console.log('infinite scroll elements not found')
+    }
+    },
+    ajaxLoad: function (target, url, data, callback) {
+        var $t = $('#' + target);
+        if (!$t.length) {
+            return false;
+        }
+        callback = callback || app.fadeIn;
+        $t.load(url, data, callback);
+        return true;
+    },
+    fadeIn: function () {
+        $(this).css('opacity', 0).fadeTo('fast', 1);
+    },
+    pageLoad: function (clear_infinity_page_counter) {
+        var self = this;
+        // if(this.loading ||  $('.ajax_pages').length < 1) {
+        //     return;
+        // }
+        // this.loading = true;
+        var sect2 = $('.ajax_pages').attr('data-title_seo');
+        var paginate_ajax_link = $('.ajax_pages').attr('data-paginate_ajax_link');
+        var section = $.isEmptyObject(sect2) ? '' : sect2;
+        var new_page = parseInt($.app.page_last) + 1;
+        console.log('NEW PAGE', new_page);
+        $.ajax({
+            url: '/pagination' + paginate_ajax_link + section + '?page=' + new_page,
+            type: 'POST',
+            dataType: 'html',
+            success: function (data) {
+                $('<div>', {class: self.page_class + " ajax" + new_page + "", html: ""}).appendTo('.ajax_pages');
+                $('.ajax' + new_page).html(data);
+                if (clear_infinity_page_counter) {
+                    $.app.infinity_load_page_count = 0;
+                } else {
+                    $.app.infinity_load_page_count++;
+                }
+                $.app.page_last++;
+                $.app.loading = false;
+            },
+            error: function () {
+                $.app.loading = true;
+            }
+        });
+        //$('.button_prev').attr('href','/?page='+link);
+        // $('.button_next').attr('href','/?page='+new_page);
+        return false;
+
+    },
+    sendCounters: function () {
+        console.log('SEND COUNTERS');
+        countersUrl = window.location.pathname + window.location.search + window.location.hash;
+        var lasturl = window.location.href;
+        if (typeof (ym) != "undefined") {
+           // yaCounter12901429.hit(countersUrl, {'title': document.title, 'referer': lasturl});
+            ym(12901429, 'hit', countersUrl, {'title': document.title, 'referer': lasturl});
+            console.log('SEND Ym hit', countersUrl);
+        }
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){
+            dataLayer.push(arguments);
+        }
+        if (typeof (gtag) != "undefined") {
+            console.log('SEND GTAG', countersUrl);
+            gtag('set', {
+                'page_path': countersUrl,
+                'page_title': document.title
+            });
+            gtag('event', 'page_view', {
+                'page_path': countersUrl,
+                'page_title': document.title
+            });
+            setTimeout(function () {
+                gtag('event', '5seconds', {'action': 'read'});
+            }, 5000);
+        }
+        if (typeof (ga) != "undefined") {
+            console.log('SEND GA', countersUrl);
+            ga('create', 'UA-57093701-1', 'auto');
+            ga('set', 'page', countersUrl);
+            ga('send', 'pageview', {page: countersUrl});
+            setTimeout(function () {
+                ga('send', 'event', '5seconds', 'read');
+            }, 5000);
+        }
+    },
+};
+
+$(function () {
+    //  Инициализация перенесена в main.js
+    // $.app.init();
+})
+
+$('a[rel~=async]').live('click', function () {
+    var target = $(this).data('target') || this.target;
+    return !$.app.ajaxLoad(target, this.href);
+});
+
+$(function () {
+    var sect2 = $('.ajax_pages').attr('data-title_seo');
+    var paginate_ajax_link = $('.ajax_pages').attr('data-paginate_ajax_link');
+    var section = $.isEmptyObject(sect2) ? '' : sect2;
+    if (location.pathname !== '/search') {
+        if (location.pathname.match(/\/all\/term\//)
+            || location.pathname.match(/\/specialsfg\//)) {
+
+        } else {
+            $('.pagination').on('click', function () {
+                if(document.querySelector('.ajax_pages')){
+                    $.app.loading = true;
+                    return $.app.pageLoad();
+                } else {
+                    console.log('infinite scroll elements not found')
+                }
+            })
+        }
+
+    }
+});
+
+function setLocation(curLoc) {
+    try {
+        history.pushState(null, null, curLoc);
+        return;
+    } catch (e) {
+    }
+    location.hash = '#' + curLoc;
+}
+
+//выбираем пользователей винды и ставим странице
+if (navigator.appVersion.indexOf("Win") != -1) document.documentElement.setAttribute('data-userOS', "windows");
+//сбиваем запоимнание позиции при обновлении страницы,для бесконечного скрола
+// window.onload=function(){
+//     setTimeout(function(){
+//         scrollTo(0,-1);
+//     },0);
+// };

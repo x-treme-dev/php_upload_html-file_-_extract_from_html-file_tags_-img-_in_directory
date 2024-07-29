@@ -1,0 +1,61 @@
+MediaThumb = function (url, width, height, title) {
+    this.allowed_extnsions = [
+        'mp4',
+        'jpg',
+        'jpeg',
+        'png',
+        'bmp',
+        'gif',
+        'webp',
+        'svg',
+    ];
+
+    this.url = url;
+    this.width = width || false;
+    this.height = height || false;
+    this.title = title || '';
+
+    this.fixed_height = false;
+    this.fixed_width = false;
+    this.atributes = {};
+};
+MediaThumb.prototype = {
+    getExt: function (url) {
+        return url.slice((url.lastIndexOf(".") - 1 >>> 0) + 2);
+    },
+    setTitle: function (title) {
+        this.title = title;
+    },
+    getThumbUrl(url, width, height, crop) {
+        crop = crop || 5;
+        return '/thumb/' + width + 'x' + height + '_' + crop + url;
+    },
+    fixedHeight:function(){
+        this.fixed_height = true;
+    },
+    fixedWidth:function(){
+        this.fixed_width = true;
+    },
+
+    render() {
+        if (this.getExt(this.url) === 'mp4') {
+            var container_style = '';
+            if(this.fixed_width) {
+                 container_style += 'width:'+this.width+'px;';
+            }
+            if(this.fixed_height) {
+                 container_style += 'height:'+this.height+'px;';
+            }
+            var video_style =   'display:block; background-color: #ececec;';
+
+            return '<div class=" overflow-hidden" style="'+container_style+'" ' +
+                'data-va-width="' + this.width + '" ' +
+                'data-va-height="' + this.height + '">' +
+                '<video class="db w-100 h-100"  oncontextmenu ="return false;" playsinline="true" muted="true" autoplay="true" style="'+video_style+'">' +
+                '<source src="' + this.url + '" type="video/mp4"></video>' +
+                '</div>';
+        } else {
+            return '<img src="' + this.getThumbUrl(this.url, this.width, this.height) + '"   alt="' + this.title + '" >';
+        }
+    }
+};

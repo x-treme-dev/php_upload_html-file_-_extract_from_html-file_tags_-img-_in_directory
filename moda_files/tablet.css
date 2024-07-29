@@ -1,0 +1,118 @@
+
+.alphabetPost,.instagramPost,.fashion,.articlePost{
+    margin:0 25px !important;
+    clear: none !important;
+    width:250px;
+}
+.alphabetList,.instagramList,.columnist__list,.postList{
+    width: 670px;
+    margin: 0 auto 90px;
+    padding-top: 90px;
+}
+.image-wrap>img{
+    /*border-radius: 100%;*/
+}
+.instagramPost__link,.columnist__name,.smallPreview__header{
+    height: 80px;
+    overflow: hidden;
+}
+.row21 {
+    width: 670px;
+    margin: auto;
+}
+.column{
+   /* width: 290px!important;
+    margin: 20px 20px !important;*/
+}
+.row21>.column:nth-child(n+3){
+    display: none;
+}
+.wrapper{
+    padding: 0 10px !important;
+}
+.section-regular {
+    max-width: 415px;
+}
+.col_2{
+    margin: 0 auto;
+    float: none;
+}
+.-wide,.post-cards,.wide,.editor-flex{
+    margin: 0 auto;
+    float: none;
+    position: static;
+}
+.articleBottom__inner{
+    width: auto;
+}
+#adriver_banner_5{
+    margin: auto;
+}
+.image-wrap>img{
+    width: 100%;
+}
+
+
+
+
+
+.headerMenuMain__item:nth-child(n+6) {
+    display: none;
+}
+.index_section .smallPreview:nth-child(n+3) {
+    display: none;
+}
+.index_section {
+    width: 670px;
+    margin: 0 auto 90px auto;
+}
+
+
+.header_inner{
+    width: 100%;
+    min-width: 675px;
+}
+aside {
+    margin: 0px 0 20px;
+
+}
+aside .scroll_block, aside .widget_tall {
+    float: none;
+    width: 300px;
+    margin: 0 auto;
+}
+.col_2{
+    float:none;
+}
+.row22 .column:nth-child(2n){
+    margin: 0 auto 40px auto !important;
+}
+.row22 .column{
+    margin: 0 auto 40px auto;
+    float: none;
+}
+.row21 .column:nth-child(n+5){
+    display: none;
+}
+.circle-section .column+.column{
+    margin-left: 0;
+    margin-right: 50px;
+}
+.row21 .column:nth-child(5n+4) {
+    clear: initial;
+}
+.circle-section{
+    width: 700px;
+    margin: 0 auto;
+}
+.alphabet{display: none}
+.editorial{
+    float:none;
+    margin: 0 auto;
+}
+.news-section{
+    margin: 58px 50px 0;
+}
+.col_2{
+    margin: 0 auto !important;
+}
